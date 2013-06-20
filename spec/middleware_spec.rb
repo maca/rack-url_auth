@@ -6,7 +6,7 @@ describe UrlAuth do
   let(:secret)    { 'my-secretive-secret' }
   let(:inner_app) { mock('App', call: []) }
 
-  it { UrlAuth::VERSION.should eq '0.0.0' }
+  it { UrlAuth::VERSION.should eq '0.0.1' }
 
   describe 'intantiation' do
     let(:signer) { mock('Signer') }

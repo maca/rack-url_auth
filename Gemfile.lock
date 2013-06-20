@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rack-url_auth (0.0.0)
+    rack-url_auth (0.0.1)
 
 GEM
   remote: https://rubygems.org/
