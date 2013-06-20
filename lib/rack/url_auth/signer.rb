@@ -36,10 +36,18 @@ module Rack
 
       private
       def build_url(purl, query)
-        query = Rack::Utils.build_query(query)
-        url = "#{purl.scheme}://#{purl.host}#{':' + purl.port.to_s if purl.port}#{purl.path}"
-        url = "#{url}?#{query}" unless query.empty?
-        url
+        query    = Rack::Utils.build_query(query)
+
+        unless purl.scheme
+          raise(ArgumentError,
+                'URI protocol must be provided `http:// or https://`')
+        end
+
+        url_ary = [purl.scheme, '://', purl.host]
+        url_ary.push( ':', purl.port ) unless [80, 443].include?(purl.port)
+        url_ary.push( purl.path )
+        url_ary.push( '?', query ) unless query.empty?
+        url_ary.join
       end
 
       class MissingSignature < StandardError

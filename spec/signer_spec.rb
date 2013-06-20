@@ -19,7 +19,7 @@ describe UrlAuth::Signer do
   end
 
   describe 'signed urls' do
-    let(:url)        { 'http://example.com:3000/path?token=1&query=sumething' }
+    let(:url)        { 'http://example.com/path?token=1&query=sumething' }
     let(:signed_url) { signer.sign_url url }
 
     it 'appends signature' do
@@ -30,8 +30,24 @@ describe UrlAuth::Signer do
       signed_url.should include '?token=1&query=sumething'
     end
 
-    it 'keeps port' do
+    it 'keeps host and path' do
+      signed_url.should match %r{http://example\.com/path}
+    end
+
+    it 'obviates port if 443' do
+      signed_url = signer.sign_url 'http://example.com:443/path?token=1&query=sumething'
+      signed_url.should match %{^http://example.com/path}
+    end
+
+    it 'keeps port if different than 80' do
+      signed_url = signer.sign_url 'http://example.com:3000/path?token=1&query=sumething'
       signed_url.should match %{^http://example.com:3000}
+    end
+
+    it 'raises error if scheme is not provided' do
+      expect {
+        signer.sign_url 'example.com'
+      }.to raise_error ArgumentError
     end
 
     it 'verifies untampered url' do
@@ -45,9 +61,9 @@ describe UrlAuth::Signer do
     end
 
     it 'raises error when url is unsigned while verifying url' do
-      lambda do
+      expect {
         signer.verify_url 'http://example.com'
-      end.should raise_error UrlAuth::Signer::MissingSignature
+      }.to raise_error UrlAuth::Signer::MissingSignature
     end
   end
 end
