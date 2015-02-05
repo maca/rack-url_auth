@@ -4,12 +4,12 @@ include Rack
 
 describe UrlAuth do
   let(:secret)    { 'my-secretive-secret' }
-  let(:inner_app) { mock('App', call: []) }
+  let(:inner_app) { double('App', call: []) }
 
   it { UrlAuth::VERSION.should eq '0.0.1' }
 
   describe 'intantiation' do
-    let(:signer) { mock('Signer') }
+    let(:signer) { double('Signer') }
 
     it 'requires a secret' do
       expect { UrlAuth.new(inner_app) }.
@@ -30,7 +30,7 @@ describe UrlAuth do
   describe 'calling' do
     let(:app)   { UrlAuth.new(inner_app, secret: secret) }
     let(:env)   { { path: '/'} }
-    let(:proxy) { mock('Proxy') }
+    let(:proxy) { double('Proxy') }
 
     it 'sets proxy as env variable' do
       UrlAuth::Proxy.should_receive(:new).

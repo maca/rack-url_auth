@@ -4,7 +4,7 @@ include Rack
 
 describe UrlAuth::Proxy do
   let(:env)    { Rack::MockRequest.env_for('/home?signature=mock') }
-  let(:signer) { mock('Signer') }
+  let(:signer) { double('Signer') }
   let(:proxy)  { UrlAuth::Proxy.new(env, signer) }
 
   describe 'signing urls' do

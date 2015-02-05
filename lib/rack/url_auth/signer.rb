@@ -39,8 +39,7 @@ module Rack
         query    = Rack::Utils.build_query(query)
 
         unless purl.scheme
-          raise(ArgumentError,
-                'URI protocol must be provided `http:// or https://`')
+          raise(ArgumentError, 'URI protocol must be provided')
         end
 
         url_ary = [purl.scheme, '://', purl.host]
