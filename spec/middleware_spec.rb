@@ -6,8 +6,6 @@ describe UrlAuth do
   let(:secret)    { 'my-secretive-secret' }
   let(:inner_app) { double('App', call: []) }
 
-  it { UrlAuth::VERSION.should eq '0.0.1' }
-
   describe 'intantiation' do
     let(:signer) { double('Signer') }
 
@@ -17,13 +15,13 @@ describe UrlAuth do
     end
 
     it 'instantiates an signer' do
-      UrlAuth::Signer.
-        should_receive(:new).
+      expect(UrlAuth::Signer).
+        to receive(:new).
         with(secret).
         and_return(signer)
 
       app = UrlAuth.new(inner_app, secret: secret)
-      app.signer.should be signer
+      expect(app.signer).to be signer
     end
   end
 
@@ -33,15 +31,15 @@ describe UrlAuth do
     let(:proxy) { double('Proxy') }
 
     it 'sets proxy as env variable' do
-      UrlAuth::Proxy.should_receive(:new).
+      expect(UrlAuth::Proxy).to receive(:new).
         with(env, app.signer).and_return(proxy)
 
       app.call(env)
-      env['rack.url_auth'].should be proxy
+      expect(env['rack.url_auth']).to be proxy
     end
 
     it 'forwards to app' do
-      inner_app.should_receive(:call).with(env)
+      expect(inner_app).to receive(:call).with(env)
       app.call(env)
     end
   end

@@ -1,3 +1,5 @@
+require 'hmac-sha2'
+
 module Rack
   class UrlAuth
     class Signer
@@ -8,8 +10,7 @@ module Rack
       end
 
       def sign(message)
-        sha1 = OpenSSL::Digest::Digest.new('sha1')
-        OpenSSL::HMAC.hexdigest sha1, secret, message
+        HMAC::SHA256.hexdigest secret, message
       end
 
       def verify(message, signature)
