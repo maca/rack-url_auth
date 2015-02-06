@@ -10,13 +10,13 @@ module Rack
 
       def authorized?
         method = request.request_method.downcase
+        signature_header = request.env["HTTP_X_SIGNATURE"]
 
-        if request.get? || request.delete? || request.head? || request.options?
+        if !signature_header && request.get? || request.head?
           signer.verify_url(request.url, method)
         else
-          body      = request.body.read; request.body.rewind
-          signature = request.env["HTTP_X_SIGNATURE"]
-          signer.verify(request.url + method + body, signature)
+          body = request.body.read; request.body.rewind
+          signer.verify(method + request.url + body, signature_header)
         end
       end
     end

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rack-url_auth (0.1.0)
+    rack-url_auth (0.1.1)
       ruby-hmac
 
 GEM

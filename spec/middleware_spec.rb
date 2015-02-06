@@ -5,7 +5,7 @@ describe Rack::UrlAuth do
 
   let(:secret)    { 'secretive-secret' }
   let(:inner_app) { ->(env){ [200,{},['Hello, world.']] } }
-  let!(:app)      { Rack::UrlAuth.new(inner_app, secret: secret) }
+  let(:app)       { Rack::UrlAuth.new(inner_app, secret: secret) }
 
   describe 'instantiation' do
     it 'requires a secret' do
@@ -29,7 +29,7 @@ describe Rack::UrlAuth do
     end
 
     it 'forbids request if method is incorrect' do
-      delete "/index?signature=#{signature}"
+      head "/index?signature=#{signature}"
       expect( last_request.env['rack.signature_auth'] ).not_to be_authorized
     end
   end
@@ -37,7 +37,7 @@ describe Rack::UrlAuth do
 
   describe 'request with body' do
     let(:signature) {
-      'a677070257119ae5f05bd3813802e6de9247ea1e3bd6bd2aee518e589740a2b7'
+      'bab5dd78fce9f4fd85c5037466c5a5e22cf67ba14f25005f499ddc7820710475'
     }
 
     it 'autorizes request' do
@@ -62,6 +62,27 @@ describe Rack::UrlAuth do
       header 'X-Signature', signature
       put '/index', name: 'Macario'
       expect( last_request.env['rack.signature_auth'] ).not_to be_authorized
+    end
+  end
+
+  describe 'handling authentication' do
+    context 'not forwarding auth to app' do
+      let(:app) { Rack::UrlAuth.new(inner_app, secret: secret) }
+
+      it 'returns forbidden status code' do
+        get "/forbid"
+        expect( last_response.status ).to eq 403
+      end
+    end
+
+    context 'forwarding auth to app' do
+      let(:app) { Rack::UrlAuth.new(inner_app,
+                                    forward_auth: true, secret: secret) }
+
+      it 'returns forbidden status code' do
+        get "/forbid"
+        expect( last_response.status ).to eq 200
+      end
     end
   end
 end

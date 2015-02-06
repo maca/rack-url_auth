@@ -22,7 +22,7 @@ describe UrlAuth::Signer do
     let(:signed_url) { signer.sign_url url, 'get' }
 
     it 'appends signature' do
-      expect(signed_url).to match %r{&signature=\w{40}}
+      expect(signed_url).to match %r{&signature=\w{64}}
     end
 
     it 'keeps params' do
