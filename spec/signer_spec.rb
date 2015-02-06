@@ -19,7 +19,7 @@ describe UrlAuth::Signer do
 
   describe 'signed urls' do
     let(:url)        { 'http://example.com/path?token=1&query=sumething' }
-    let(:signed_url) { signer.sign_url url }
+    let(:signed_url) { signer.sign_url url, 'get' }
 
     it 'appends signature' do
       expect(signed_url).to match %r{&signature=\w{40}}
@@ -34,35 +34,42 @@ describe UrlAuth::Signer do
     end
 
     it 'obviates port if 443' do
-      signed_url = signer.sign_url 'http://example.com:443/path?token=1&query=sumething'
+      signed_url = signer.
+        sign_url 'http://example.com:443/path?token=1&query=sumething', 'get'
       expect(signed_url).to match %{^http://example.com/path}
     end
 
     it 'keeps port if different than 80' do
-      signed_url = signer.sign_url 'http://example.com:3000/path?token=1&query=sumething'
+      signed_url = signer.
+        sign_url 'http://example.com:3000/path?token=1&query=sumething', 'get'
       expect(signed_url).to match %{^http://example.com:3000}
     end
 
     it 'raises error if scheme is not provided' do
       expect {
-        signer.sign_url 'example.com'
+        signer.sign_url 'example.com', 'get'
       }.to raise_error ArgumentError
     end
 
     it 'verifies untampered url' do
-      expect(signer.verify_url(signed_url)).to be true
+      expect( signer.verify_url(signed_url, 'get') ).to be true
     end
 
     it 'verifies false if url is tampered' do
-      expect(signer.verify_url(signed_url.sub(/\.com/, '.me'))).to       be false
-      expect(signer.verify_url(signed_url.sub('path', 'other-path'))).to be false
-      expect(signer.verify_url(signed_url.sub('1', '2'))).to             be false
+      expect( signer.verify_url(signed_url.sub(/\.com/, '.me'), 'get') ).
+        to be false
+      expect( signer.verify_url(signed_url.sub('path', 'other-path'), 'get') ).
+        to be false
+      expect( signer.verify_url(signed_url.sub('1', '2'), 'get') ).
+        to be false
+    end
+
+    it 'verifies that the method is correct' do
+      expect( signer.verify_url(signed_url, 'delete') ).to be false
     end
 
     it 'raises error when url is unsigned while verifying url' do
-      expect {
-        signer.verify_url 'http://example.com'
-      }.to raise_error UrlAuth::Signer::MissingSignature
+      expect(signer.verify_url 'http://example.com', 'get').to be false
     end
   end
 end

@@ -1,46 +1,67 @@
 require 'spec_helper'
 
-include Rack
+describe Rack::UrlAuth do
+  include Rack::Test::Methods
 
-describe UrlAuth do
-  let(:secret)    { 'my-secretive-secret' }
-  let(:inner_app) { double('App', call: []) }
+  let(:secret)    { 'secretive-secret' }
+  let(:inner_app) { ->(env){ [200,{},['Hello, world.']] } }
+  let!(:app)      { Rack::UrlAuth.new(inner_app, secret: secret) }
 
-  describe 'intantiation' do
-    let(:signer) { double('Signer') }
-
+  describe 'instantiation' do
     it 'requires a secret' do
-      expect { UrlAuth.new(inner_app) }.
-        to raise_error(ArgumentError)
-    end
-
-    it 'instantiates an signer' do
-      expect(UrlAuth::Signer).
-        to receive(:new).
-        with(secret).
-        and_return(signer)
-
-      app = UrlAuth.new(inner_app, secret: secret)
-      expect(app.signer).to be signer
+      expect { Rack::UrlAuth.new(app) }.to raise_error ArgumentError
     end
   end
 
-  describe 'calling' do
-    let(:app)   { UrlAuth.new(inner_app, secret: secret) }
-    let(:env)   { { path: '/'} }
-    let(:proxy) { double('Proxy') }
+  describe 'request without body' do
+    let(:signature) {
+      'b645417491551a215286db40cd3fbdd97c7e2f146b2feb0ae5f32f03537ed343'
+    }
 
-    it 'sets proxy as env variable' do
-      expect(UrlAuth::Proxy).to receive(:new).
-        with(env, app.signer).and_return(proxy)
-
-      app.call(env)
-      expect(env['rack.url_auth']).to be proxy
+    it 'authorizes request' do
+      get "/index?signature=#{signature}"
+      expect( last_request.env['rack.signature_auth'] ).to be_authorized
     end
 
-    it 'forwards to app' do
-      expect(inner_app).to receive(:call).with(env)
-      app.call(env)
+    it 'forbids request if url is tampered' do
+      get "/forbid?signature=#{signature}"
+      expect( last_request.env['rack.signature_auth'] ).not_to be_authorized
+    end
+
+    it 'forbids request if method is incorrect' do
+      delete "/index?signature=#{signature}"
+      expect( last_request.env['rack.signature_auth'] ).not_to be_authorized
+    end
+  end
+
+
+  describe 'request with body' do
+    let(:signature) {
+      'a677070257119ae5f05bd3813802e6de9247ea1e3bd6bd2aee518e589740a2b7'
+    }
+
+    it 'autorizes request' do
+      header 'X-Signature', signature
+      post '/index', name: 'Macario'
+      expect( last_request.env['rack.signature_auth'] ).to be_authorized
+    end
+
+    it 'forbids request if url is tampered' do
+      header 'X-Signature', signature
+      post '/forbid', name: 'Macario'
+      expect( last_request.env['rack.signature_auth'] ).not_to be_authorized
+    end
+
+    it 'forbids request if body is tampered' do
+      header 'X-Signature', signature
+      post '/index', name: 'Juan'
+      expect( last_request.env['rack.signature_auth'] ).not_to be_authorized
+    end
+
+    it 'forbids request if method is incorrect' do
+      header 'X-Signature', signature
+      put '/index', name: 'Macario'
+      expect( last_request.env['rack.signature_auth'] ).not_to be_authorized
     end
   end
 end

@@ -19,20 +19,20 @@ module Rack
         actual == expected
       end
 
-      def sign_url(url)
+      def sign_url(url, method)
         purl  = URI.parse url
         query = Rack::Utils.parse_query purl.query
-        query.merge! 'signature' => sign(url)
+        query.merge! 'signature' => sign(method.to_s.downcase + url)
 
         build_url purl, query
       end
 
-      def verify_url(url)
+      def verify_url(url, method)
         purl      = URI.parse url
         query     = Rack::Utils.parse_query(purl.query)
-        signature = query.delete('signature') or raise MissingSignature
+        signature = query.delete('signature').to_s
 
-        verify build_url(purl, query), signature
+        verify method.to_s.downcase + build_url(purl, query), signature
       end
 
       private
@@ -48,9 +48,6 @@ module Rack
         url_ary.push( purl.path )
         url_ary.push( '?', query ) unless query.empty?
         url_ary.join
-      end
-
-      class MissingSignature < StandardError
       end
     end
   end

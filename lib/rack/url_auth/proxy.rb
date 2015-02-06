@@ -8,13 +8,18 @@ module Rack
         @signer  = signer
       end
 
-      def url_authorized?
-        signer.verify_url(request.url)
-      end
+      def authorized?
+        method = request.request_method.downcase
 
-      def sign_url(url)
-        signer.sign_url(url)
+        if request.get? || request.delete? || request.head? || request.options?
+          signer.verify_url(request.url, method)
+        else
+          body      = request.body.read; request.body.rewind
+          signature = request.env["HTTP_X_SIGNATURE"]
+          signer.verify(request.url + method + body, signature)
+        end
       end
     end
+
   end
 end

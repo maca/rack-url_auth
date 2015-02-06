@@ -7,12 +7,13 @@ module Rack
     attr_reader :app, :signer
 
     def initialize(app, opts = {})
-      secret = opts[:secret] or raise(ArgumentError, 'Please provide `secret`')
+      secret = opts[:secret] or
+        raise(ArgumentError, 'Please provide `secret`')
       @app, @signer = app, Signer.new(secret)
     end
 
     def call(env)
-      env['rack.url_auth'] = Proxy.new(env, signer)
+      env['rack.signature_auth'] = Proxy.new(env, signer)
       @app.call(env)
     end
   end
