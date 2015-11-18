@@ -44,7 +44,7 @@ module Rack
         end
 
         url_ary = [purl.scheme, '://', purl.host]
-        url_ary.push( ':', purl.port ) unless [80, 443].include?(purl.port)
+        url_ary.push( ':', purl.port ) unless [80, 443, nil].include?(purl.port)
         url_ary.push( purl.path )
         url_ary.push( '?', query ) unless query.empty?
         url_ary.join
