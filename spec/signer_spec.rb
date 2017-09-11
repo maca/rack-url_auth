@@ -33,22 +33,10 @@ describe UrlAuth::Signer do
       expect(signed_url).to match %r{http://example\.com/path}
     end
 
-    it 'obviates port if 443' do
-      signed_url = signer.
-        sign_url 'http://example.com:443/path?token=1&query=sumething', 'get'
-      expect(signed_url).to match %{^http://example.com/path}
-    end
-
     it 'keeps port if different than 80' do
       signed_url = signer.
         sign_url 'http://example.com:3000/path?token=1&query=sumething', 'get'
       expect(signed_url).to match %{^http://example.com:3000}
-    end
-
-    it 'raises error if scheme is not provided' do
-      expect {
-        signer.sign_url 'example.com', 'get'
-      }.to raise_error ArgumentError
     end
 
     it 'verifies untampered url' do
@@ -70,6 +58,12 @@ describe UrlAuth::Signer do
 
     it 'raises error when url is unsigned while verifying url' do
       expect(signer.verify_url 'http://example.com', 'get').to be false
+    end
+
+    it 'normalizes url' do
+      signed_url = signer.
+        sign_url 'http://example.com/path?token=1&query=sumething:else', 'get'
+      expect( signer.verify_url(signed_url, 'get') ).to be true
     end
   end
 end

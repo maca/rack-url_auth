@@ -1,4 +1,5 @@
 require 'hmac-sha2'
+require 'addressable'
 
 module Rack
   class UrlAuth
@@ -10,44 +11,36 @@ module Rack
       end
 
       def sign(message)
-        HMAC::SHA256.hexdigest secret, message
+        HMAC::SHA256.hexdigest(secret, message)
       end
 
       def verify(message, signature)
-        actual   = Digest::SHA1.hexdigest sign(message)
+        actual = Digest::SHA1.hexdigest sign(message)
         expected = Digest::SHA1.hexdigest signature
         actual == expected
       end
 
       def sign_url(url, method)
-        purl  = URI.parse url
+        purl = Addressable::URI.parse url
         query = Rack::Utils.parse_query purl.query
-        query.merge! 'signature' => sign(method.to_s.downcase + url)
+        query['signature'] = sign(method.to_s.downcase + url)
 
-        build_url purl, query
+        build_url(purl, query)
       end
 
       def verify_url(url, method)
-        purl      = URI.parse url
-        query     = Rack::Utils.parse_query(purl.query)
+        purl = Addressable::URI.parse url
+        query = Rack::Utils.parse_query(purl.query)
         signature = query.delete('signature').to_s
+        message = method.to_s.downcase + build_url(purl, query)
 
-        verify method.to_s.downcase + build_url(purl, query), signature
+        verify(message, signature)
       end
 
       private
       def build_url(purl, query)
-        query    = Rack::Utils.build_query(query)
-
-        unless purl.scheme
-          raise(ArgumentError, 'URI protocol must be provided')
-        end
-
-        url_ary = [purl.scheme, '://', purl.host]
-        url_ary.push( ':', purl.port ) unless [80, 443, nil].include?(purl.port)
-        url_ary.push( purl.path )
-        url_ary.push( '?', query ) unless query.empty?
-        url_ary.join
+        purl.query = Rack::Utils.build_query(query)
+        purl.normalize.to_s
       end
     end
   end
