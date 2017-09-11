@@ -6,9 +6,9 @@ describe UrlAuth::Signer do
   let(:signer) { UrlAuth::Signer.new('my-secretive-secret') }
 
   describe 'signing and validating messages' do
-    let(:message)          { 'HMAC is fun!!' }
+    let(:message) { 'HMAC is fun!!' }
     let(:tampered_message) { 'HMAC is fun!!!' }
-    let(:signature)        { signer.sign message }
+    let(:signature) { signer.sign message }
 
     it 'signs a messages' do
       expect(signature.size).to eq(64)
@@ -18,7 +18,7 @@ describe UrlAuth::Signer do
   end
 
   describe 'signed urls' do
-    let(:url)        { 'http://example.com/path?token=1&query=sumething' }
+    let(:url) { 'http://example.com/path?token=1&query=sumething' }
     let(:signed_url) { signer.sign_url url, 'get' }
 
     it 'appends signature' do
@@ -62,7 +62,7 @@ describe UrlAuth::Signer do
 
     it 'normalizes url' do
       signed_url = signer.
-        sign_url 'http://example.com/path?token=1&query=sumething:else', 'get'
+        sign_url 'http://example.com/path?token=點看&query=sumething:else', 'get'
       expect( signer.verify_url(signed_url, 'get') ).to be true
     end
   end

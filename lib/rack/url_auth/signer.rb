@@ -21,16 +21,15 @@ module Rack
       end
 
       def sign_url(url, method)
-        purl = Addressable::URI.parse url
-        query = Rack::Utils.parse_query purl.query
-        query['signature'] = sign(method.to_s.downcase + url)
+        purl, query = parse_and_extract_query(url)
+        normalized = purl.normalize.to_s
+        query['signature'] = sign(method.to_s.downcase + normalized)
 
         build_url(purl, query)
       end
 
       def verify_url(url, method)
-        purl = Addressable::URI.parse url
-        query = Rack::Utils.parse_query(purl.query)
+        purl, query = parse_and_extract_query(url)
         signature = query.delete('signature').to_s
         message = method.to_s.downcase + build_url(purl, query)
 
@@ -38,6 +37,13 @@ module Rack
       end
 
       private
+
+      def parse_and_extract_query(url)
+        purl = Addressable::URI.parse(url)
+        query = purl.query_values || {}
+        [purl, query]
+      end
+
       def build_url(purl, query)
         purl.query = Rack::Utils.build_query(query)
         purl.normalize.to_s
